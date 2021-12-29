@@ -1,4 +1,12 @@
-import { Formik, Form, Field, ErrorMessage, FieldProps } from "formik";
+import {
+  Formik,
+  Form,
+  Field,
+  ErrorMessage,
+  FieldProps,
+  FieldArray,
+  FastField,
+} from "formik";
 import React, { ReactElement } from "react";
 import * as yup from "yup";
 import { TextError } from "./TextError";
@@ -14,6 +22,7 @@ interface FormValues {
     twitter: string;
   };
   phoneNumbers: string[];
+  phNumbers: string[];
 }
 
 const initialValues: FormValues = {
@@ -27,6 +36,7 @@ const initialValues: FormValues = {
     twitter: "",
   },
   phoneNumbers: ["", ""],
+  phNumbers: [""],
 };
 
 const onSubmit = (values: FormValues) => {
@@ -63,7 +73,7 @@ export const YoutubeForm = (): ReactElement => {
             <Field type="email" id="email" name="email" />
             <ErrorMessage
               name="email"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
@@ -76,7 +86,7 @@ export const YoutubeForm = (): ReactElement => {
             />
             <ErrorMessage
               name="channel"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
@@ -84,13 +94,19 @@ export const YoutubeForm = (): ReactElement => {
             <Field as="textarea" id="comments" name="comments" />
             <ErrorMessage
               name="comments"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
             <label htmlFor="address">Address</label>
-            <Field name="address">
+            <FastField name="address">
               {({ field, form, meta }: FieldProps) => {
+                /* 
+                Fast field is an optimised version of the Field component
+                which internally implements `shouldComponentUpdate` lifecycle
+                method to block all aditional re-renders unless there are direct
+                updates on the FastField itself (use with caution)
+                */
                 return (
                   <div>
                     <input type="text" id="address" {...field} />
@@ -100,10 +116,10 @@ export const YoutubeForm = (): ReactElement => {
                   </div>
                 );
               }}
-            </Field>
+            </FastField>
             <ErrorMessage
               name="address"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
@@ -111,7 +127,7 @@ export const YoutubeForm = (): ReactElement => {
             <Field type="text" id="facebook" name="social.facebook" />
             <ErrorMessage
               name="facebook"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
@@ -119,7 +135,7 @@ export const YoutubeForm = (): ReactElement => {
             <Field type="text" id="twitter" name="social.twitter" />
             <ErrorMessage
               name="twitter"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
@@ -127,7 +143,7 @@ export const YoutubeForm = (): ReactElement => {
             <Field type="text" id="primaryPh" name="phoneNumbers[0]" />
             <ErrorMessage
               name="primaryPh"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
           </div>
           <div className="form-control">
@@ -135,8 +151,38 @@ export const YoutubeForm = (): ReactElement => {
             <Field type="text" id="secondaryPh" name="phoneNumbers[1]" />
             <ErrorMessage
               name="secondaryPh"
-              component={TextError as React.ComponentType<{}>}
+              component={TextError as React.FunctionComponent}
             />
+          </div>
+          <div className="form-control">
+            <label htmlFor="">List of phone numbers</label>
+            <FieldArray name="phNumbers">
+              {(fieldArrayProps) => {
+                const { push, remove, form } = fieldArrayProps;
+                const { values } = form;
+                const { phNumbers } = values as FormValues;
+
+                console.log(fieldArrayProps);
+                return (
+                  <div>
+                    {phNumbers.map((_, idx) => (
+                      <div key={idx} style={{ display: "flex" }}>
+                        <Field name={`phNumbers[${idx}]`} />
+                        {idx > 0 && (
+                          <button type="button" onClick={() => remove(idx)}>
+                            Remove
+                          </button>
+                        )}
+
+                        <button type="button" onClick={() => push("")}>
+                          Add
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
+            </FieldArray>
           </div>
           <button type="submit">Submit</button>
         </Form>
