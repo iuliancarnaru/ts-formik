@@ -6,8 +6,9 @@ import {
   FieldProps,
   FieldArray,
   FastField,
+  FormikHelpers,
 } from "formik";
-import React, { ReactElement } from "react";
+import React, { ReactElement, useState } from "react";
 import * as yup from "yup";
 import { TextError } from "./TextError";
 
@@ -39,8 +40,27 @@ const initialValues: FormValues = {
   phNumbers: [""],
 };
 
-const onSubmit = (values: FormValues) => {
+const savedValues: FormValues = {
+  name: "John Doe",
+  email: "test@test.com",
+  channel: "codevolution",
+  comments: "Welcome to formik",
+  address: "221b Baker Street",
+  social: {
+    facebook: "",
+    twitter: "",
+  },
+  phoneNumbers: ["", ""],
+  phNumbers: [""],
+};
+
+const onSubmit = (
+  values: FormValues,
+  onSubmitProps: FormikHelpers<FormValues>
+) => {
   console.log(values);
+  onSubmitProps.setSubmitting(false);
+  onSubmitProps.resetForm();
 };
 
 const validationSchema = yup.object({
@@ -62,16 +82,26 @@ const validateComments = (value: string) => {
 };
 
 export const YoutubeForm = (): ReactElement => {
+  const [formValues, setFromValues] = useState<FormValues | null>(null);
   return (
     // Formik behave as a context provider component for the components that it wraps
     <Formik
-      initialValues={initialValues}
+      initialValues={formValues || initialValues}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
+      enableReinitialize
       // validateOnChange={false}
       // validateOnBlur={false}
+      // validateOnMount // (suitable for form with few fields)
     >
-      {({ validateField, validateForm, setFieldTouched, setTouched }) => (
+      {({
+        validateField,
+        validateForm,
+        setFieldTouched,
+        setTouched,
+        isValid,
+        isSubmitting,
+      }) => (
         <Form>
           {/* Form automatically hooks `handleSubmit` */}
           <div className="form-control">
@@ -206,7 +236,7 @@ export const YoutubeForm = (): ReactElement => {
               }}
             </FieldArray>
           </div>
-          <button type="button" onClick={() => validateField("comments")}>
+          {/* <button type="button" onClick={() => validateField("comments")}>
             Validate comments
           </button>
           <button type="button" onClick={() => validateForm()}>
@@ -227,8 +257,14 @@ export const YoutubeForm = (): ReactElement => {
             }
           >
             Visit all
+          </button> */}
+          <button type="button" onClick={() => setFromValues(savedValues)}>
+            Load saved data
           </button>
-          <button type="submit">Submit</button>
+          {/* <button type="reset">Clear form fields</button> --> doesn't work with saved data */}
+          <button type="submit" disabled={isSubmitting || !isValid}>
+            Submit
+          </button>
         </Form>
       )}
     </Formik>
