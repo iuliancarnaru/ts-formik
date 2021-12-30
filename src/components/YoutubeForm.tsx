@@ -47,8 +47,19 @@ const validationSchema = yup.object({
   name: yup.string().required("Required"),
   email: yup.string().email("Invalid email format").required("Required"),
   channel: yup.string().required("Required"),
+  // comments: yup.string().required("Required"),
   // skipping validation for some fields (to be added)
 });
+
+const validateComments = (value: string) => {
+  let error;
+
+  if (!value) {
+    error = "Required";
+  }
+
+  return error;
+};
 
 export const YoutubeForm = (): ReactElement => {
   return (
@@ -57,10 +68,12 @@ export const YoutubeForm = (): ReactElement => {
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
+      // validateOnChange={false}
+      // validateOnBlur={false}
     >
-      <div>
-        {/* Form automatically hooks `handleSubmit` */}
+      {({ validateField, validateForm, setFieldTouched, setTouched }) => (
         <Form>
+          {/* Form automatically hooks `handleSubmit` */}
           <div className="form-control">
             <label htmlFor="name">Name</label>
             <Field type="text" id="name" name="name" />
@@ -91,7 +104,12 @@ export const YoutubeForm = (): ReactElement => {
           </div>
           <div className="form-control">
             <label htmlFor="comments">Comments</label>
-            <Field as="textarea" id="comments" name="comments" />
+            <Field
+              as="textarea"
+              id="comments"
+              name="comments"
+              validate={validateComments}
+            />
             <ErrorMessage
               name="comments"
               component={TextError as React.FunctionComponent}
@@ -102,11 +120,11 @@ export const YoutubeForm = (): ReactElement => {
             <FastField name="address">
               {({ field, form, meta }: FieldProps) => {
                 /* 
-                Fast field is an optimised version of the Field component
-                which internally implements `shouldComponentUpdate` lifecycle
-                method to block all aditional re-renders unless there are direct
-                updates on the FastField itself (use with caution)
-                */
+              Fast field is an optimised version of the Field component
+              which internally implements `shouldComponentUpdate` lifecycle
+              method to block all aditional re-renders unless there are direct
+              updates on the FastField itself (use with caution)
+              */
                 return (
                   <div>
                     <input type="text" id="address" {...field} />
@@ -155,14 +173,18 @@ export const YoutubeForm = (): ReactElement => {
             />
           </div>
           <div className="form-control">
-            <label htmlFor="">List of phone numbers</label>
+            <label htmlFor="phNumbers">List of phone numbers</label>
             <FieldArray name="phNumbers">
               {(fieldArrayProps) => {
                 const { push, remove, form } = fieldArrayProps;
                 const { values } = form;
                 const { phNumbers } = values as FormValues;
-
-                console.log(fieldArrayProps);
+                /* 
+              Validation runs in the following cases:
+                1. When a change event has occurred
+                2. When a blur out event occurred (click outside field)
+                3. Wen form submission is attempted
+              */
                 return (
                   <div>
                     {phNumbers.map((_, idx) => (
@@ -184,9 +206,31 @@ export const YoutubeForm = (): ReactElement => {
               }}
             </FieldArray>
           </div>
+          <button type="button" onClick={() => validateField("comments")}>
+            Validate comments
+          </button>
+          <button type="button" onClick={() => validateForm()}>
+            Validate all
+          </button>
+          <button type="button" onClick={() => setFieldTouched("comments")}>
+            Visit comments
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setTouched({
+                name: true,
+                email: true,
+                channel: true,
+                comments: true,
+              })
+            }
+          >
+            Visit all
+          </button>
           <button type="submit">Submit</button>
         </Form>
-      </div>
+      )}
     </Formik>
   );
 };
